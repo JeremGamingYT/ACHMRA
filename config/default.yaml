@@ -1,0 +1,24 @@
+llm:
+  provider: ollama  # options: ollama, mock
+  model: tinyllama:1.1b
+  timeout_s: 60
+
+memory:
+  data_dir: ./data
+  vector_db: vector.db
+  episodes_db: episodes.db
+  kg_file: kg.graphml
+  embed_model: BAAI/bge-small-en-v1.5
+
+server:
+  host: 127.0.0.1
+  port: 8000
+
+alignment:
+  max_tokens: 512
+  refuse_risky: true
+  blocked_topics: []
+
+planner:
+  max_depth: 4
+  max_branches: 3

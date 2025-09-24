@@ -1,0 +1,7 @@
+env/
+/env
+/documentation
+documentation/
+data/
+/data
+.cursorignore

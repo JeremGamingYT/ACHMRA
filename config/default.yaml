@@ -1,5 +1,5 @@
 llm:
-  provider: ollama  # options: ollama, mock
+  provider: mock  # options: ollama, mock
   model: tinyllama:1.1b
   timeout_s: 60
 
@@ -22,3 +22,7 @@ alignment:
 planner:
   max_depth: 4
   max_branches: 3
+
+tracing:
+  enabled: true
+  dir: ./data/traces

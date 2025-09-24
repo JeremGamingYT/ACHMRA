@@ -43,6 +43,7 @@ class AppConfig(BaseModel):
     server: ServerConfig = Field(default_factory=ServerConfig)
     alignment: AlignmentConfig = Field(default_factory=AlignmentConfig)
     planner: PlannerConfig = Field(default_factory=PlannerConfig)
+    tracing: dict = Field(default_factory=lambda: {"enabled": True, "dir": "./data/traces"})
 
 
 def load_config(path: Optional[str] = None) -> AppConfig:

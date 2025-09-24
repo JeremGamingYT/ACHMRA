@@ -5,3 +5,5 @@ documentation/
 data/
 /data
 .cursorignore
+./polymer/__pycache__
+__pycache__/

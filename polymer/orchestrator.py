@@ -10,6 +10,7 @@ from .memory import VectorStore, EpisodicMemory, KnowledgeGraph
 from .reasoners import ConstraintChecker, ProgramSandbox
 from .planner.htn import HTNPlanner
 from .verification.verify import quick_checks
+from .tracing import TraceLogger, Trace
 
 
 class Orchestrator:
@@ -25,6 +26,7 @@ class Orchestrator:
         self.checker = ConstraintChecker(blocked_topics=config.alignment.blocked_topics)
         self.sandbox = ProgramSandbox()
         self.planner = HTNPlanner(max_depth=config.planner.max_depth, max_branches=config.planner.max_branches)
+        self.tracer = TraceLogger(enabled=bool(config.tracing.get("enabled", True)), directory=str(config.tracing.get("dir", "./data/traces")))
 
     def _init_llm(self) -> LLM:
         if self.config.llm.provider == "ollama":
@@ -63,8 +65,7 @@ class Orchestrator:
         if not needs_clarification:
             answer = self._answer(question, context_text)
         verif = quick_checks(answer)
-        self.episodes.add(f"query:{question[:60]}")
-        return {
+        result = {
             "intent": intention.model_dump(),
             "plan": plan.model_dump(),
             "context": ctx,
@@ -74,6 +75,23 @@ class Orchestrator:
             "needs_clarification": needs_clarification,
             "clarifying_question": clarifying_question,
         }
+        # Trace logging
+        try:
+            self.tracer.save(
+                Trace(
+                    question=question,
+                    intention=result["intent"],
+                    plan=result["plan"],
+                    context=result["context"],
+                    answer=result["answer"],
+                    verification=result["verification"],
+                    meta=result["meta"],
+                )
+            )
+        except Exception:
+            pass
+        self.episodes.add(f"query:{question[:60]}")
+        return result
 
     def _answer(self, question: str, context: str) -> str:
         if isinstance(self.llm, MockLLM):

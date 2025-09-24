@@ -36,12 +36,12 @@ class Orchestrator:
         return self.vector.add_text(text, metadata)
 
     def query(self, question: str) -> dict:
-        # Plan
-        plan = self.planner.plan(question)
         # Parse (heuristic first, then optional LLM refinement)
         intention = self.parser.parse(question)
         if self._should_use_llm_for_parsing(question) and not isinstance(self.llm, MockLLM):
             intention = self._refine_intention(intention, question)
+        # Plan with intention
+        plan = self.planner.plan(question, intention)
         issues = self.checker.check(intention)
         # Retrieve
         ctx = self.vector.search(question, top_k=5)

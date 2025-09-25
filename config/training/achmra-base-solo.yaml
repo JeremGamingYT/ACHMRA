@@ -4,8 +4,8 @@ data:
   train_file: /kaggle/working/ACHMRA/data/achmra/train.jsonl
   val_file: /kaggle/working/ACHMRA/data/achmra/val.jsonl
   test_file: /kaggle/working/ACHMRA/data/achmra/test.jsonl
-  preference_file: /kaggle/working/ACHMRA/data/achmra/preference.jsonl
-  rl_file: /kaggle/working/ACHMRA/data/achmra/rl.jsonl
+  preference_file: null
+  rl_file: null
   tokenizer_dir: null
 
 sft:

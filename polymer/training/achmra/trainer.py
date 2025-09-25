@@ -12,10 +12,13 @@ class AchmraTrainer(Trainer):
     def __init__(self, *args: Any, achmra_config: AchmraTrainingConfig, **kwargs: Any) -> None:
         self.achmra_config = achmra_config
         super().__init__(*args, **kwargs)
-        allowed_ids = [self.tokenizer.convert_tokens_to_ids(tok) for tok in achmra_config.anti_cot.allowed_tokens]
+        processor = getattr(self, "processing_class", None) or getattr(self, "tokenizer", None)
+        if processor is None:
+            raise ValueError("AchmraTrainer requires a tokenizer/processing_class")
+        allowed_ids = [processor.convert_tokens_to_ids(tok) for tok in achmra_config.anti_cot.allowed_tokens]
         self.allowed_token_ids = torch.tensor([idx for idx in allowed_ids if idx is not None and idx >= 0], dtype=torch.long)
 
-    def compute_loss(self, model, inputs, return_outputs=False):  # type: ignore[override]
+    def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch: int | None = None):  # type: ignore[override]
         anti_mask = inputs.pop("anti_cot_mask", None)
         outputs = model(**inputs)
         loss = outputs.get("loss")

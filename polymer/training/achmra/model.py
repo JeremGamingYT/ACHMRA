@@ -45,10 +45,16 @@ class AchmraReasoningWrapper(nn.Module):
         return self.model.config
 
     def __getattr__(self, name):
+        # Preserve nn.Module attribute resolution before delegating to the wrapped model
         try:
-            return super().__getattribute__(name)
+            return nn.Module.__getattr__(self, name)
         except AttributeError:
-            return getattr(self.model, name)
+            pass
+        model = super().__getattribute__("model")
+        try:
+            return getattr(model, name)
+        except AttributeError as exc:
+            raise AttributeError(f"{self.__class__.__name__} has no attribute {name!r}") from exc
 
     def forward(self, **inputs: Any) -> dict[str, Any]:  # noqa: D401
         aux_keys = {
@@ -146,5 +152,3 @@ def load_achmra_model(
 
 
 __all__ = ["AchmraReasoningWrapper", "load_achmra_model", "AchmraModelArtifacts"]
-
-

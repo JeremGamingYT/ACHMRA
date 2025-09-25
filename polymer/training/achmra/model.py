@@ -45,9 +45,10 @@ class AchmraReasoningWrapper(nn.Module):
         return self.model.config
 
     def __getattr__(self, name):
-        if name in {"model", "config", "conf_token_id", "latent_head", "confidence_head"}:
+        try:
             return super().__getattribute__(name)
-        return getattr(self.model, name)
+        except AttributeError:
+            return getattr(self.model, name)
 
     def forward(self, **inputs: Any) -> dict[str, Any]:  # noqa: D401
         aux_keys = {

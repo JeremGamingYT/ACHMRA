@@ -70,6 +70,7 @@ class Orchestrator:
             "plan": plan.model_dump(),
             "context": ctx,
             "answer": answer,
+            "answer_struct": self._parse_achmra_output(answer),
             "verification": verif + issues,
             "meta": {"uncertainty": uncertainty, "decisions": decisions},
             "needs_clarification": needs_clarification,
@@ -96,14 +97,37 @@ class Orchestrator:
     def _answer(self, question: str, context: str) -> str:
         if isinstance(self.llm, MockLLM):
             return f"[MOCK] Q: {question}\nCTX: {context[:400]}"
-        prompt = (
-            "You are a helpful, concise assistant. Use the context when relevant.\n"
-            f"Context:\n{context}\n\nQuestion: {question}\nAnswer in French."
+        system_prompt = (
+            "System: Tu es ACHMRA-Base-Solo. Effectue tes passes internes dans ta langue privee et maintiens un graphe de pensees multi-branche invisible.\n"
+            "Avant de repondre, fournis un resume humain concis via [THOUGHT], puis reponds avec [FINAL] et [CONF] (ajoute [NEXT] si une information manque).\n"
+            "Ne devoile jamais ta langue interne brute ni les tokens de controle.\n"
         )
+        prompt = f"{system_prompt}\nContext:\n{context}\n\nQuestion: {question}\n"
         max_tok = min(256, self.config.alignment.max_tokens)
         resp = self.llm.complete(prompt, max_tokens=max_tok, temperature=0.2)
         return resp.text.strip()
-
+    def _parse_achmra_output(self, text: str) -> dict:
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        final = None
+        thought = None
+        confidence = None
+        next_step = None
+        for line in lines:
+            upper = line.upper()
+            if upper.startswith("[THOUGHT]") and thought is None:
+                thought = line[9:].strip()
+            elif upper.startswith("[FINAL]") and final is None:
+                final = line[7:].strip()
+            elif upper.startswith("[CONF]") and confidence is None:
+                try:
+                    confidence = float(line[6:].strip())
+                except ValueError:
+                    confidence = None
+            elif upper.startswith("[NEXT]") and next_step is None:
+                next_step = line[6:].strip()
+        if final is None:
+            final = text.strip()
+        return {"final": final, "confidence": confidence, "next": next_step, "thought": thought}
     # --- Metacognitive policies ---
     def _should_use_llm_for_parsing(self, text: str) -> bool:
         return len(text) > 120 or ("et" in text and "," in text)
@@ -126,3 +150,11 @@ class Orchestrator:
                 pass
         # Fallback
         return "Pouvez-vous préciser le résultat attendu et les contraintes clés ?"
+
+
+
+
+
+
+
+

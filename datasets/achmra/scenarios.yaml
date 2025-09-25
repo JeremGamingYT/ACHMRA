@@ -1,0 +1,332 @@
+- id: urban_microfarm
+  difficulty: advanced
+  tags: [urbanism, nutrition, sustainability]
+  base:
+    conversation:
+      - role: user
+        content: >-
+          Je veux transformer mon balcon de {area_m2} m2 a {city} en micro-ferme capable de couvrir {target_people}
+          repas par jour. Objectifs nutrition: {target_calories} kcal et {protein_target} g de proteines, sans depasser
+          {water_limit} L d eau par semaine ni utiliser d appareils bruyants (en dessous de 40 dB). Les heures de soleil direct sont limitees a {sun_hours}h.
+    compressed_memory: "Projet precedent: user > potager recouvert pour zone ventilee, apprecie les feuilles amers."
+    constraints:
+      - Optimiser la densite verticale pour soleil limite
+      - Budget bruit < 40 dB
+      - Gestion de l eau par recyclage / goutte a goutte
+    latent_passes:
+      - token: "<pass_0>"
+        description: "Classifier besoins nutritionnels et surface"
+      - token: "<pass_1>"
+        description: "Composer plan cultural et rotation"
+      - token: "<verify>"
+        description: "Verifier bilan hydrique et bruit"
+    internal_language:
+      - channel: planner
+        content: "calc_density({area_m2}, sun={sun_hours}, target={target_people})"
+      - channel: safety
+        content: "check_noise(<40) & water_usage<={water_limit}"
+    thought_graph:
+      root: N1
+      nodes:
+        - id: N1
+          label: Intent
+          statement: "Atteindre ration {target_calories} kcal / {protein_target} g proteines avec balcon {area_m2} m2"
+          confidence: 0.9
+          children: [N2, N3]
+        - id: N2
+          label: Energie
+          statement: "Paniers micro-pousses + kale nain = 520 kcal/j"
+          confidence: 0.82
+          parents: [N1]
+          children: [N4]
+        - id: N3
+          label: Proteines
+          statement: "Champignons pleurotes + haricots grimpants = 92 g proteines"
+          confidence: 0.76
+          parents: [N1]
+          children: [N4]
+        - id: N4
+          label: Contraintes
+          statement: "Recycle 65% eau et ventilation passive <38 dB"
+          confidence: 0.71
+          parents: [N2, N3]
+      edges:
+        - source: N1
+          target: N2
+          relation: renforce
+        - source: N1
+          target: N3
+          relation: renforce
+        - source: N2
+          target: N4
+          relation: valide
+        - source: N3
+          target: N4
+          relation: valide
+    thought_summary: >-
+      Graphe: branche energie (micro-pousses + kale nain) fusionne avec branche proteines (pleurotes + haricots). Noeud commun confirme eau recyclee et silence <38 dB.
+    final: >-
+      Installer etageres modulaire nord-sud (3 niveaux) avec micro-pousses tournesol et kale nain (1 recolte/7j) pour 540 kcal,
+      colonne champignons pleurotes sur substrat de marc reutilise pour 48 g proteines, et treillis haricots grimpants (F1 nains) pour 46 g proteines.
+      Arrosage goutte a goutte bouclee (pompe 34 dB, cuve 90 L) et capteur capacitif coupe a 65% humidite. Rideaux d ombrage reglables pour limiter soleil direct a 4h.
+      Livrer feuilles amers en smoothies le matin, champignons/vapeur soir, haricots crus en micro-salades.
+    next: null
+  parameters:
+    - key: mtl
+      values:
+        city: Montreal
+        area_m2: 18
+        sun_hours: 5
+        water_limit: 120
+        target_people: 4
+        target_calories: 2200
+        protein_target: 85
+        confidence: 0.83
+        split: train
+    - key: lyon
+      values:
+        city: Lyon
+        area_m2: 14
+        sun_hours: 4
+        water_limit: 100
+        target_people: 3
+        target_calories: 1800
+        protein_target: 70
+        confidence: 0.8
+        split: train
+    - key: valencia
+      values:
+        city: Valence
+        area_m2: 20
+        sun_hours: 6
+        water_limit: 140
+        target_people: 5
+        target_calories: 2400
+        protein_target: 95
+        confidence: 0.78
+        split: val
+    - key: oslo
+      values:
+        city: Oslo
+        area_m2: 12
+        sun_hours: 3
+        water_limit: 90
+        target_people: 3
+        target_calories: 1900
+        protein_target: 72
+        confidence: 0.75
+        split: test
+
+- id: lunar_supply_chain
+  difficulty: expert
+  tags: [space, logistics, energy]
+  base:
+    conversation:
+      - role: user
+        content: >-
+          Nous preparons une base lunaire a {site} qui comptera {crew} astronautes d ici 9 mois. Je dois orchestrer un cycle
+          de ravitaillement continu avec un delta-v limite a {dv_limit} km/s et un budget energie solaire hebdo de {solar_kwh} kWh.
+          Les modules cryogeniques ne peuvent pas etre exposes plus de {exposure_hours} heures a la chaleur lunaire par cycle.
+    compressed_memory: "Labo precedent: reecrit plan Mars -> Lune, prefere buffers >20%."
+    constraints:
+      - Maintenir tampon nutrition >= 14 jours
+      - Tenir delta-v <= {dv_limit} km/s pour chaque trajet
+      - Respecter fenetre thermique cryogenique ({exposure_hours} h)
+    latent_passes:
+      - token: "<pass_0>"
+        description: "Estimer cadence cargo vs consommation"
+      - token: "<pass_1>"
+        description: "Optimiser energie et fenetres thermiques"
+      - token: "<pass_1>"
+        description: "Verifier redundance EVA"
+    internal_language:
+      - channel: logistics
+        content: "solve_flow(crew={crew}, buffer=14j, dv={dv_limit})"
+      - channel: energy
+        content: "allocate_solar({solar_kwh} kWh, cryo_limit={exposure_hours}h)"
+    thought_graph:
+      root: G0
+      nodes:
+        - id: G0
+          label: Intent
+          statement: "Boucle logistique continue vers {site} pour {crew} astronautes"
+          confidence: 0.88
+          children: [G1, G2]
+        - id: G1
+          label: Cadence
+          statement: "Cargo recyclage eau + agro module toutes les 18 jours"
+          confidence: 0.74
+          parents: [G0]
+          children: [G3]
+        - id: G2
+          label: Energie
+          statement: "Solaires tandem + fuel cell reserve = 7.8 kWh/j dispo"
+          confidence: 0.69
+          parents: [G0]
+          children: [G4]
+        - id: G3
+          label: Delta-v
+          statement: "Trajet halo NRHO -> surface -> NRHO: 5.9 km/s"
+          confidence: 0.66
+          parents: [G1]
+        - id: G4
+          label: Thermique
+          statement: "Expose cryo max 3.5 h avec regolith + radiateurs"
+          confidence: 0.72
+          parents: [G2]
+      edges:
+        - source: G0
+          target: G1
+          relation: decomposer
+        - source: G0
+          target: G2
+          relation: decomposer
+        - source: G1
+          target: G3
+          relation: valide
+        - source: G2
+          target: G4
+          relation: valide
+    thought_summary: >-
+      Graphe bifurque cadence cargo et enveloppe energetique. Validation delta-v a 5.9 km/s et fenetre cryo <4 h assurent boucle stable.
+    final: >-
+      Etablir double convoi NRHO -> surface toutes les 18 jours: module A eau/agro (2.4 t) puis module B consommables/science (2.1 t).
+      Utiliser propulsion methane-oxygene avec correction periselene pour rester a 5.9 km/s. Buffer nutrition garde 16 jours via silos sous-regolith,
+      fuel cells en veille fournissent 1.2 kWh/j supplementaires en cas d eclipse. Rotations EVA limitees a 4 h, conteneurs cryo places dans tranchees
+      reflectives pour rester sous {exposure_hours} h d exposition thermique.
+    next: null
+  parameters:
+    - key: shackletons
+      values:
+        site: "Shackleton Rim"
+        crew: 12
+        dv_limit: 6.2
+        solar_kwh: 4200
+        exposure_hours: 4
+        confidence: 0.68
+        split: train
+    - key: malapert
+      values:
+        site: "Malapert Massif"
+        crew: 8
+        dv_limit: 6.0
+        solar_kwh: 3800
+        exposure_hours: 3.5
+        confidence: 0.64
+        split: val
+    - key: mare_nobilium
+      values:
+        site: "Mare Nobilium"
+        crew: 10
+        dv_limit: 5.8
+        solar_kwh: 3600
+        exposure_hours: 3.2
+        confidence: 0.62
+        split: test
+
+- id: oncology_triage
+  difficulty: critical
+  tags: [medical, decision]
+  base:
+    conversation:
+      - role: user
+        content: >-
+          Nous devons prioriser trois protocoles d immunotherapie pour un essai phase II. Patients: {patients} cas de carcinome, biomarqueurs PD-L1 >= {pdl1}%.
+          Contraintes: toxicite cumulative grade 3 < {toxicity}% et budget medicament < {budget} kEUR/mois. Donnees de reponse partielle presentes mais incompletes
+          pour le protocole C. Comment proposer un plan de priorisation et quelles donnees supplementaires devrions-nous exiger ?
+    compressed_memory: "Historique clinique: a refuse un protocole sans donnees neutropenie, exige confirmations externes."
+    constraints:
+      - Prioriser protocole avec hazard ratio <= 0.65
+      - Toxicite grade 3 < {toxicity}%
+      - Budget global < {budget} kEUR/mois
+    latent_passes:
+      - token: "<pass_0>"
+        description: "Evaluer efficacite vs toxicite"
+      - token: "<pass_1>"
+        description: "Verifier budget et logistique"
+      - token: "<verify>"
+        description: "Identifier donnees manquantes critiques"
+    internal_language:
+      - channel: analysis
+        content: "compare(HR_A={hr_a}, HR_B={hr_b}, HR_C={hr_c_missing}? )"
+      - channel: risk
+        content: "if tox_A<{toxicity} and tox_B<{toxicity} else flag"
+    thought_graph:
+      root: T0
+      nodes:
+        - id: T0
+          label: Intent
+          statement: "Prioriser protocole immuno sous budget {budget} kEUR/mois"
+          confidence: 0.86
+          children: [T1, T2]
+        - id: T1
+          label: Efficacite
+          statement: "Protocoles A (HR {hr_a}) et B (HR {hr_b}) confirmes"
+          confidence: 0.81
+          parents: [T0]
+          children: [T3]
+        - id: T2
+          label: Toxicite
+          statement: "Toxicite cumul A 18%, B 21%, C inconnu"
+          confidence: 0.74
+          parents: [T0]
+          children: [T3]
+        - id: T3
+          label: Donnees manquantes
+          statement: "Protocole C sans neutropenie grade 3 -> besoin donnees"
+          confidence: 0.52
+          parents: [T1, T2]
+      edges:
+        - source: T0
+          target: T1
+          relation: supporte
+        - source: T0
+          target: T2
+          relation: supporte
+        - source: T1
+          target: T3
+          relation: questionne
+        - source: T2
+          target: T3
+          relation: questionne
+    thought_summary: >-
+      Graphe montre A et B compatibles (hazard ratio <=0.63) mais noeud T3 signale manque de donnees toxicite C -> mise en attente conditionnelle.
+    final: >-
+      Prioriser protocole A (HR {hr_a}, reponse partielle 58%) en cohorte principale; protocole B en bras adaptatif (HR {hr_b}) avec monitoring renforce des enzymes hepatiques.
+      Protocole C en evaluation conditionnelle uniquement apres reception metrics neutropenie grade 3 et pharmacocinetique dose-escalade. Allouer budget 112 kEUR/mois (A)
+      + 94 kEUR/mois (B) restant sous plafond {budget} kEUR/mois.
+    next: "[NEXT] Fournir neutropenie grade 3 et taux de drop-out pour protocole C avant inclusion."
+  parameters:
+    - key: cohort_alpha
+      values:
+        patients: 68
+        pdl1: 50
+        toxicity: 25
+        budget: 220
+        hr_a: 0.61
+        hr_b: 0.64
+        hr_c_missing: 0.7
+        confidence: 0.58
+        split: train
+    - key: cohort_beta
+      values:
+        patients: 54
+        pdl1: 45
+        toxicity: 23
+        budget: 210
+        hr_a: 0.6
+        hr_b: 0.62
+        hr_c_missing: 0.69
+        confidence: 0.55
+        split: val
+    - key: cohort_gamma
+      values:
+        patients: 72
+        pdl1: 55
+        toxicity: 24
+        budget: 230
+        hr_a: 0.59
+        hr_b: 0.63
+        hr_c_missing: 0.68
+        confidence: 0.54
+        split: test

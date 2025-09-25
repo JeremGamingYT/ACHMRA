@@ -62,6 +62,13 @@ python -m polymer.cli ingest --text "La photosynthèse convertit l'énergie lumi
 python -m polymer.cli query --question "Explique la photosynthèse en trois étapes."
 ```
 
+### ACHMRA-Base-Solo Training Pipeline
+- Config: update `config/training/achmra-base-solo.yaml` (nouveaux blocs internal_language et thought_graph) et referencez les jeux jsonl generes avec `scripts/build_achmra_dataset.py`.
+- Dataset builder: ajustez `datasets/achmra/scenarios.yaml` puis lancez `python scripts/build_achmra_dataset.py --outdir data/achmra` (ou `samples/achmra`) pour obtenir un corpus fiable: chaque entree combine `[THOUGHT]/[FINAL]/[CONF]/[NEXT]`, passes latentes, segments de langue interne (`<il_begin>/<il_bridge>/<il_end>`) et graph-of-thought multi-branche (`<got_section>/<got_node>/<got_edge>`).
+- CLI garde-fous: `python -m polymer.cli achmra --stage status` audite jeux/export sans demarrer l entrainement; les autres stages (`sft`, `preference`, `rl`, `evaluate`, `export`) restent manuels.
+- Export: `python -m polymer.cli achmra --stage export --checkpoint artifacts/achmra_base_solo/sft` (ou tout checkpoint LoRA) construit les `.gguf` via `llama_cpp_python`.
+- Automatisation: `python scripts/run_achmra_pipeline.py --stage status` reproduit le flux pour l integration continue ou les batchs.
+
 ### Endpoints
 - `POST /ingest` body: `{ text: str, metadata?: dict }` – add to vector memory and episodic store
 - `POST /query` body: `{ question: str }` – returns structured result `{ intent, plan, answer, verification }`
@@ -99,5 +106,6 @@ python -m polymer.cli --help
 
 ### License
 For professional use; add your company’s license policy as needed.
+
 
 

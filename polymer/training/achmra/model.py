@@ -120,15 +120,16 @@ class AchmraReasoningWrapper(nn.Module):
         conf_hidden = hidden_states[batch_idx, token_idx]
         pred = self.confidence_head(conf_hidden).squeeze(-1)
         target_vals = target[batch_idx]
-        loss = torch.nn.functional.mse_loss(pred, target_vals, reduction="mean")
-        if self.training_config.calibration.loss_type == "brier":
-            loss = torch.nn.functional.mse_loss(pred, target_vals, reduction="mean")
+        pred_float = pred.float()
+        target_float = target_vals.float()
+        loss = torch.nn.functional.mse_loss(pred_float, target_float, reduction='mean')
+        if self.training_config.calibration.loss_type == 'brier':
+            loss = torch.nn.functional.mse_loss(pred_float, target_float, reduction='mean')
         if self.training_config.calibration.temperature_scaling:
             loss = loss * 0.5
         full_pred = torch.zeros_like(target)
-        full_pred[batch_idx] = pred
+        full_pred[batch_idx] = pred.to(full_pred.dtype)
         return loss * self.training_config.calibration.loss_weight, full_pred
-
 
 def load_achmra_model(
     config: AchmraTrainingConfig,

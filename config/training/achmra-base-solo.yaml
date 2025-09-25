@@ -1,4 +1,4 @@
-base_model: meta-llama/Meta-Llama-3-8B-Instruct
+base_model: lmstudio-community/Qwen3-4B-Instruct
 
 data:
   train_file: data/achmra/train.jsonl

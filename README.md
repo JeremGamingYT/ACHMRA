@@ -67,7 +67,12 @@ python -m polymer.cli query --question "Explique la photosynthèse en trois éta
 - Dataset builder: ajustez `datasets/achmra/scenarios.yaml` puis lancez `python scripts/build_achmra_dataset.py --outdir data/achmra` (ou `samples/achmra`) pour obtenir un corpus fiable: chaque entree combine `[THOUGHT]/[FINAL]/[CONF]/[NEXT]`, passes latentes, segments de langue interne (`<il_begin>/<il_bridge>/<il_end>`) et graph-of-thought multi-branche (`<got_section>/<got_node>/<got_edge>`).
 - CLI garde-fous: `python -m polymer.cli achmra --stage status` audite jeux/export sans demarrer l entrainement; les autres stages (`sft`, `preference`, `rl`, `evaluate`, `export`) restent manuels.
 - Export: `python -m polymer.cli achmra --stage export --checkpoint artifacts/achmra_base_solo/sft` (ou tout checkpoint LoRA) construit les `.gguf` via `llama_cpp_python`.
-- Automatisation: `python scripts/run_achmra_pipeline.py --stage status` reproduit le flux pour l integration continue ou les batchs.
+- Automatisation: `python scripts/run_achmra_pipeline.py --stage status` reproduit le flux pour l integration continue; utilisez `python scripts/train_achmra_full.py --help` pour enchainer SFT/Preference/RL/Export depuis Python.
+
+### Modele Runtime
+- Telechargez le GGUF `Qwen3-4B-Instruct-2507-GGUF` depuis https://huggingface.co/lmstudio-community/Qwen3-4B-Instruct-2507-GGUF (par exemple fichier `Qwen3-4B-Instruct-Q4_K_M.gguf`).
+- Utilisez `llama.cpp` release b6096 (https://github.com/ggml-org/llama.cpp/releases/tag/b6096) ou un runner compatible base sur cette version pour l inference locale.
+- L entrainement se fait sur le checkpoint HF `lmstudio-community/Qwen3-4B-Instruct` defini dans `config/training/achmra-base-solo.yaml`, puis l export `achmra --stage export` reconstruit le GGUF voulu.
 
 ### Endpoints
 - `POST /ingest` body: `{ text: str, metadata?: dict }` – add to vector memory and episodic store

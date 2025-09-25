@@ -18,6 +18,29 @@ class AchmraTrainer(Trainer):
         allowed_ids = [processor.convert_tokens_to_ids(tok) for tok in achmra_config.anti_cot.allowed_tokens]
         self.allowed_token_ids = torch.tensor([idx for idx in allowed_ids if idx is not None and idx >= 0], dtype=torch.long)
 
+    def _move_model_to_device(self, model, device):
+        quantized_flags = (
+            getattr(model, 'is_loaded_in_4bit', False),
+            getattr(model, 'is_loaded_in_8bit', False),
+            getattr(model, 'is_quantized', False),
+        )
+        if not any(quantized_flags):
+            base = getattr(model, 'model', None)
+            if base is not None:
+                quantized_flags = (
+                    getattr(base, 'is_loaded_in_4bit', False),
+                    getattr(base, 'is_loaded_in_8bit', False),
+                    getattr(base, 'is_quantized', False),
+                )
+        if any(quantized_flags):
+            torch_device = device if isinstance(device, torch.device) else torch.device(device)
+            for head_name in ('latent_head', 'confidence_head'):
+                head = getattr(model, head_name, None)
+                if head is not None:
+                    head.to(torch_device)
+            return model
+        return super()._move_model_to_device(model, device)
+
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch: int | None = None):  # type: ignore[override]
         anti_mask = inputs.pop("anti_cot_mask", None)
         outputs = model(**inputs)

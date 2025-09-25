@@ -139,6 +139,7 @@ def build_achmra_pipeline(config: AchmraTrainingConfig | str | Path) -> AchmraPi
     model_kwargs: dict[str, Any] = {}
     if cfg.load_in_4bit:
         model_kwargs["load_in_4bit"] = True
+        model_kwargs.setdefault("device_map", "auto")
     artifacts = load_achmra_model(cfg, tokenizer, **model_kwargs)
     if cfg.gradient_checkpointing:
         artifacts.base_model.gradient_checkpointing_enable()

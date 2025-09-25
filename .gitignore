@@ -2,8 +2,6 @@ env/
 /env
 /documentation
 documentation/
-data/
-/data
 .cursorignore
 ./polymer/__pycache__
 __pycache__/

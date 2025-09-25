@@ -38,7 +38,16 @@ class AchmraReasoningWrapper(nn.Module):
         self.latent_head = nn.Linear(hidden_size, config.latent_passes.embedding_dim)
         self.confidence_head = ConfidenceHead(hidden_size)
         self.conf_token_id = conf_token_id
-        self.config = config
+        self.training_config = config
+
+    @property
+    def config(self):
+        return self.model.config
+
+    def __getattr__(self, name):
+        if name in {"model", "config", "conf_token_id", "latent_head", "confidence_head"}:
+            return super().__getattribute__(name)
+        return getattr(self.model, name)
 
     def forward(self, **inputs: Any) -> dict[str, Any]:  # noqa: D401
         aux_keys = {
@@ -88,7 +97,7 @@ class AchmraReasoningWrapper(nn.Module):
         diff = (preds - latent_targets) ** 2
         masked = diff * latent_mask.unsqueeze(-1)
         denom = latent_mask.sum() + 1e-6
-        return masked.sum() / denom * self.config.latent_passes.loss_weight
+        return masked.sum() / denom * self.training_config.latent_passes.loss_weight
 
     def _confidence_loss(
         self,
@@ -105,13 +114,13 @@ class AchmraReasoningWrapper(nn.Module):
         pred = self.confidence_head(conf_hidden).squeeze(-1)
         target_vals = target[batch_idx]
         loss = torch.nn.functional.mse_loss(pred, target_vals, reduction="mean")
-        if self.config.calibration.loss_type == "brier":
+        if self.training_config.calibration.loss_type == "brier":
             loss = torch.nn.functional.mse_loss(pred, target_vals, reduction="mean")
-        if self.config.calibration.temperature_scaling:
+        if self.training_config.calibration.temperature_scaling:
             loss = loss * 0.5
         full_pred = torch.zeros_like(target)
         full_pred[batch_idx] = pred
-        return loss * self.config.calibration.loss_weight, full_pred
+        return loss * self.training_config.calibration.loss_weight, full_pred
 
 
 def load_achmra_model(

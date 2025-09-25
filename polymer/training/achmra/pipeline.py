@@ -118,7 +118,7 @@ class AchmraPipeline:
             train_dataset=self.datasets[train_split],
             eval_dataset=eval_dataset,
             data_collator=self.collator,
-            tokenizer=self.tokenizer,
+            processing_class=self.tokenizer,
             achmra_config=self.config,
         )
 

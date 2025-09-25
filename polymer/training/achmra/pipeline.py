@@ -94,6 +94,9 @@ class AchmraPipeline:
     ) -> AchmraTrainer:
         output_dir = Path(self.config.export.output_dir) / stage
         output_dir.mkdir(parents=True, exist_ok=True)
+        eval_kwarg = {"eval_strategy": "steps" if eval_split else "no"}
+        if "evaluation_strategy" in TrainingArguments.__init__.__code__.co_varnames:
+            eval_kwarg = {"evaluation_strategy": "steps" if eval_split else "no"}
         args = TrainingArguments(
             output_dir=str(output_dir),
             per_device_train_batch_size=phase.batch_size,
@@ -103,13 +106,14 @@ class AchmraPipeline:
             warmup_ratio=phase.warmup_ratio,
             num_train_epochs=phase.epochs,
             max_steps=phase.steps if phase.steps is not None else -1,
-            eval_strategy="steps" if eval_split else "no",
             logging_steps=25,
             eval_steps=100,
             save_steps=200,
             save_total_limit=2,
             bf16=self.config.bf16,
             report_to=[],
+            remove_unused_columns=False,
+            **eval_kwarg,
         )
         eval_dataset = self.datasets.get(eval_split) if eval_split else None
         return AchmraTrainer(
@@ -177,4 +181,5 @@ def build_achmra_pipeline(config: AchmraTrainingConfig | str | Path) -> AchmraPi
 
 
 __all__ = ["AchmraPipeline", "build_achmra_pipeline"]
+
 

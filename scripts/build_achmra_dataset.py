@@ -164,8 +164,8 @@ def _normalise_params(raw_values: dict[str, Any], global_tags: list[str], diffic
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build the ACHMRA dataset with Graph-of-Thought supervision")
     parser.add_argument("--scenarios", default="datasets/achmra/scenarios.yaml", help="Path to the scenario YAML file")
-    parser.add_argument("--config", default="config/training/achmra-base-solo.yaml", help="Training config (for embedding dims)")
-    parser.add_argument("--outdir", default="data/achmra", help="Output directory for jsonl splits")
+    parser.add_argument("--config", default="/kaggle/working/config/training/achmra-base-solo.yaml", help="Training config (for embedding dims)")
+    parser.add_argument("--outdir", default="/kaggle/working/data/achmra", help="Output directory for jsonl splits")
     parser.add_argument("--seed", type=int, default=13)
     args = parser.parse_args()
 

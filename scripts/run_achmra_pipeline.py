@@ -9,7 +9,7 @@ from polymer.training.achmra import AchmraTrainingConfig, build_achmra_pipeline
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run ACHMRA training workflow stages")
-    parser.add_argument("--config", default="config/training/achmra-base-solo.yaml", help="Path to the ACHMRA training config")
+    parser.add_argument("--config", default="/kaggle/working/config/training/achmra-base-solo.yaml", help="Path to the ACHMRA training config")
     parser.add_argument(
         "--stage",
         choices=["status", "sft", "preference", "rl", "evaluate", "export"],

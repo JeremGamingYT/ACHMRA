@@ -1,11 +1,11 @@
 base_model: Qwen/Qwen3-4B-Instruct-2507
 
 data:
-  train_file: data/achmra/train.jsonl
-  val_file: data/achmra/val.jsonl
-  test_file: data/achmra/test.jsonl
-  preference_file: data/achmra/preference.jsonl
-  rl_file: data/achmra/rl.jsonl
+  train_file: /kaggle/working/data/achmra/train.jsonl
+  val_file: /kaggle/working/data/achmra/val.jsonl
+  test_file: /kaggle/working/data/achmra/test.jsonl
+  preference_file: /kaggle/working/data/achmra/preference.jsonl
+  rl_file: /kaggle/working/data/achmra/rl.jsonl
   tokenizer_dir: null
 
 sft:

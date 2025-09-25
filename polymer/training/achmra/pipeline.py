@@ -103,7 +103,7 @@ class AchmraPipeline:
             warmup_ratio=phase.warmup_ratio,
             num_train_epochs=phase.epochs,
             max_steps=phase.steps if phase.steps is not None else -1,
-            evaluation_strategy="steps" if eval_split else "no",
+            eval_strategy="steps" if eval_split else "no",
             logging_steps=25,
             eval_steps=100,
             save_steps=200,
